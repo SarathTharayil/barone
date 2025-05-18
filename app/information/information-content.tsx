@@ -71,6 +71,13 @@ interface BaseItem {
   time?: string
 }
 
+interface WeeklyEvent {
+  day: string
+  title: string
+  time: string
+  description: string
+}
+
 // Static policies since they're not in the database
 const staticPolicies: Policy[] = [
   {
@@ -96,7 +103,7 @@ const staticPolicies: Policy[] = [
 ]
 
 // Static weekly events
-const weeklyEvents = [
+const weeklyEvents: WeeklyEvent[] = [
   {
     day: "Monday",
     title: "Bar One Big Quiz",
@@ -401,7 +408,7 @@ export default function InformationContent() {
   }
 
   const renderEvents = () => {
-    const events = getItemsByTab() as { weekly: typeof weeklyEvents; special: typeof upcomingEvents }
+    const events = getItemsByTab() as { weekly: WeeklyEvent[]; special: Event[] }
     return (
       <div className="space-y-8">
         <div>
@@ -409,51 +416,33 @@ export default function InformationContent() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {events.weekly.map((item) => (
               <Card
-                key={('id' in item ? item.id : undefined) || Math.random()}
+                key={item.day + item.title}
                 className="overflow-hidden border-barone-darkteal/20 cursor-pointer transition-all hover:shadow-md"
                 onClick={() => handleItemClick(item)}
               >
                 <CardHeader className="flex flex-row items-start justify-between gap-4 bg-barone-darkteal/5 p-4">
                   <div className="space-y-1">
                     <CardTitle className="text-lg font-semibold leading-tight text-barone-darkteal">
-                      {('title' in item ? item.title : item.item_name) || '' as string}
+                      {item.title}
                     </CardTitle>
                   </div>
                   {getItemIcon(item)}
                 </CardHeader>
                 <CardContent className="p-4 pt-3">
                   <p className="line-clamp-2 text-sm text-muted-foreground">
-                    {('description' in item ? item.description : item.message) || '' as string}
+                    {item.description}
                   </p>
                   <div className="mt-3 flex items-center gap-2">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3.5 w-3.5" />
-                      <span>{item.time as string}</span>
+                      <span>{item.time}</span>
                     </div>
-                    {('day' in item && item.day) && (
-                      <div
-                        className={`inline-block rounded-md px-2 py-1 text-xs font-medium ${getDayColor(item.day as string)}`}
-                      >
-                        {item.day as string}
-                      </div>
-                    )}
-                    {('type' in item && item.type) && (
-                      <div
-                        className={`inline-block rounded-md px-2 py-1 text-xs font-medium ${getEventTypeColor(item.type as string)}`}
-                      >
-                        {item.type as string}
-                      </div>
-                    )}
+                    <div
+                      className={`inline-block rounded-md px-2 py-1 text-xs font-medium ${getDayColor(item.day)}`}
+                    >
+                      {item.day}
+                    </div>
                   </div>
-                  {('ticketed' in item && item.ticketed) && (
-                    <div className="mt-2 flex items-center gap-2 text-xs text-barone-coral">
-                      <Ticket className="h-3.5 w-3.5" />
-                      <span>Ticketed Event</span>
-                      {('price' in item && item.price) && (
-                        <span className="ml-1 font-medium">{item.price}</span>
-                      )}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             ))}
@@ -465,47 +454,40 @@ export default function InformationContent() {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {events.special.map((item) => (
               <Card
-                key={('id' in item ? item.id : undefined) || Math.random()}
+                key={item.id}
                 className="overflow-hidden border-barone-darkteal/20 cursor-pointer transition-all hover:shadow-md"
                 onClick={() => handleItemClick(item)}
               >
                 <CardHeader className="flex flex-row items-start justify-between gap-4 bg-barone-darkteal/5 p-4">
                   <div className="space-y-1">
                     <CardTitle className="text-lg font-semibold leading-tight text-barone-darkteal">
-                      {('title' in item ? item.title : item.item_name) || '' as string}
+                      {item.title}
                     </CardTitle>
                   </div>
                   {getItemIcon(item)}
                 </CardHeader>
                 <CardContent className="p-4 pt-3">
                   <p className="line-clamp-2 text-sm text-muted-foreground">
-                    {('description' in item ? item.description : item.message) || '' as string}
+                    {item.description}
                   </p>
                   <div className="mt-3 flex items-center gap-2">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Clock className="h-3.5 w-3.5" />
-                      <span>{item.time as string}</span>
+                      <span>{item.time}</span>
                     </div>
-                    {('day' in item && item.day) && (
+                    {item.type && (
                       <div
-                        className={`inline-block rounded-md px-2 py-1 text-xs font-medium ${getDayColor(item.day as string)}`}
+                        className={`inline-block rounded-md px-2 py-1 text-xs font-medium ${getEventTypeColor(item.type)}`}
                       >
-                        {item.day as string}
-                      </div>
-                    )}
-                    {('type' in item && item.type) && (
-                      <div
-                        className={`inline-block rounded-md px-2 py-1 text-xs font-medium ${getEventTypeColor(item.type as string)}`}
-                      >
-                        {item.type as string}
+                        {item.type}
                       </div>
                     )}
                   </div>
-                  {('ticketed' in item && item.ticketed) && (
+                  {item.ticketed && (
                     <div className="mt-2 flex items-center gap-2 text-xs text-barone-coral">
                       <Ticket className="h-3.5 w-3.5" />
                       <span>Ticketed Event</span>
-                      {('price' in item && item.price) && (
+                      {item.price && (
                         <span className="ml-1 font-medium">{item.price}</span>
                       )}
                     </div>
@@ -603,7 +585,9 @@ export default function InformationContent() {
           <div className="rounded-t-xl bg-barone-darkteal/5 p-4">
             <DialogHeader className="mt-12 space-y-4 text-center">
               <div className="flex flex-col items-center gap-1.5">
-                <DialogTitle className="text-2xl font-bold text-barone-darkteal">{selectedItem?.title}</DialogTitle>
+                <DialogTitle className="text-2xl font-bold text-barone-darkteal">
+                  {itemType === 'alert' ? selectedItem?.item_name : selectedItem?.title}
+                </DialogTitle>
               </div>
             </DialogHeader>
           </div>
@@ -611,7 +595,7 @@ export default function InformationContent() {
           <div className="space-y-4 p-4">
             <div className="rounded-lg bg-muted/50 p-3">
               <DialogDescription className="text-sm leading-relaxed text-muted-foreground">
-                {selectedItem?.description}
+                {itemType === 'alert' ? selectedItem?.message : selectedItem?.description}
               </DialogDescription>
             </div>
 
@@ -627,6 +611,15 @@ export default function InformationContent() {
                   className={`inline-block rounded-md px-2 py-1 text-xs font-medium ${getDayColor(selectedItem.day as string)}`}
                 >
                   {selectedItem.day as string}
+                </div>
+              )}
+              {itemType === 'alert' && selectedItem && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  <span>From: {(selectedItem as InventoryAlert).start_date}</span>
+                  {(selectedItem as InventoryAlert).end_date && (
+                    <span>To: {(selectedItem as InventoryAlert).end_date}</span>
+                  )}
                 </div>
               )}
             </div>
